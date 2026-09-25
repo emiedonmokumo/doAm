@@ -73,7 +73,7 @@ model VerificationToken {
 }
 
 model Profile {
-  id            String   @id
+  id            String   @id @default(cuid())
   username      String   @unique
   fullName      String
   bio           String?

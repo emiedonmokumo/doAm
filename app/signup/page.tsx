@@ -27,7 +27,7 @@ export default function SignUpPage() {
 
     const response = await fetch('/api/register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ fullName, username: cleanUsername, email, password }) });
     if (!response.ok) {
-      const body = await response.json().catch(() => null);
+      const body = await response.json().catch((error) => error);
       setError(body?.error?.message ?? 'Unable to create your account. Please try again.');
       setLoading(false);
       return;
@@ -102,11 +102,11 @@ export default function SignUpPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="At least 6 characters"
+                placeholder="At least 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
                 className="h-12 rounded-xl border-[#e2e9e5] bg-[#fbfcfb] focus:border-[#0e6b53] focus:ring-[#0e6b53]/10"
               />
             </div>

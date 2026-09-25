@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { LocationPicker, type PickedLocation } from '@/components/location-picker';
 import { Loader2, CalendarDays, Clock3, Repeat, Zap } from 'lucide-react';
+import { time } from 'console';
 
 const RECURRENCE_OPTIONS = ['None', 'Daily', 'Weekly', 'Mon-Fri', 'Weekends'];
 
@@ -35,12 +36,53 @@ export default function CreateDoAmPage() {
     if (!user) return;
     setError('');
 
-    if (!title.trim()) { setError('Please give your DoAm a title.'); return; }
-    if (!reward || isNaN(Number(reward)) || Number(reward) <= 0) { setError('Please set a valid reward amount.'); return; }
+    if (!title.trim()) {
+      setError('Please give your DoAm a title.');
+      return;
+    }
+    if (!reward || isNaN(Number(reward)) || Number(reward) <= 0) {
+      setError('Please set a valid reward amount.');
+      return;
+    }
 
-    if (!location) { setError('Choose a location on the map or use your current location.'); return; }
+    if (!location) {
+      setError('Choose a location on the map or use your current location.');
+      return;
+    }
     setLoading(true);
-    const response = await fetch('/api/doams', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ title, description: description || undefined, reward, category, status, latitude: location.latitude, longitude: location.longitude, city: location.city, region: location.region, approximateAddress: locationLabel || undefined, instructions: additionalInstructions || undefined, scheduledAt: scheduledDate ? new Date(`${scheduledDate}T${scheduledTime || '00:00'}`).toISOString() : undefined, recurrence: recurring === 'None' ? undefined : recurring === 'Daily' ? 'DAILY' : recurring === 'Weekly' ? 'WEEKLY' : 'SELECTED_DAYS', isMultiPerson, maxParticipants: isMultiPerson ? maxParticipants : 1 }) });
+    // const timer = new Date(`${scheduledDate}T${scheduledTime || '00:00'}`).toISOString()
+    console.log(scheduledTime)
+    // console.log(timer)
+    const response = await fetch('/api/doams', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        description: description || undefined,
+        reward,
+        category,
+        status,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        city: location.city,
+        region: location.region,
+        approximateAddress: locationLabel || undefined,
+        instructions: additionalInstructions || undefined,
+        scheduledAt: scheduledDate
+          ? new Date(`${scheduledDate}T${scheduledTime || '00:00'}`).toISOString()
+          : undefined,
+        recurrence:
+          recurring === 'None'
+            ? undefined
+            : recurring === 'Daily'
+              ? 'DAILY'
+              : recurring === 'Weekly'
+                ? 'WEEKLY'
+                : 'SELECTED_DAYS',
+        isMultiPerson,
+        maxParticipants: isMultiPerson ? maxParticipants : 1,
+      }),
+    });
     if (!response.ok) {
       const body = await response.json();
       setError(body.error?.message ?? 'Unable to create your DoAm.');
@@ -57,13 +99,19 @@ export default function CreateDoAmPage() {
         <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#0e6b53]">
           <Zap className="h-3.5 w-3.5" /> Create opportunity
         </p>
-        <h1 className="text-2xl font-bold tracking-[-0.04em] text-[#16241d]">What do you need done?</h1>
-        <p className="mt-1.5 text-sm text-[#7b8880]">Keep it simple. Someone nearby is ready to help.</p>
+        <h1 className="text-2xl font-bold tracking-[-0.04em] text-[#16241d]">
+          What do you need done?
+        </h1>
+        <p className="mt-1.5 text-sm text-[#7b8880]">
+          Keep it simple. Someone nearby is ready to help.
+        </p>
       </div>
 
       <div className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="title">Give it a clear title <span className="text-red-500">*</span></Label>
+          <Label htmlFor="title">
+            Give it a clear title <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="title"
             placeholder="e.g. Help move a sofa upstairs"
@@ -74,7 +122,9 @@ export default function CreateDoAmPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">Tell people a little more <span className="text-[#a1aba5] font-normal">(optional)</span></Label>
+          <Label htmlFor="description">
+            Tell people a little more <span className="text-[#a1aba5] font-normal">(optional)</span>
+          </Label>
           <Textarea
             id="description"
             placeholder="What should someone know before they say yes?"
@@ -86,7 +136,9 @@ export default function CreateDoAmPage() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="reward">Reward (₦) <span className="text-red-500">*</span></Label>
+            <Label htmlFor="reward">
+              Reward (₦) <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="reward"
               type="number"
@@ -105,14 +157,18 @@ export default function CreateDoAmPage() {
               className="h-12 w-full rounded-xl border border-[#e2e9e5] bg-[#fbfcfb] px-3 text-sm outline-none focus:border-[#0e6b53] focus:ring-4 focus:ring-[#0e6b53]/10"
             >
               {DOAM_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
               ))}
             </select>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label>Where? <span className="text-red-500">*</span></Label>
+          <Label>
+            Where? <span className="text-red-500">*</span>
+          </Label>
           <LocationPicker value={location} onChange={setLocation} />
           <Input
             placeholder="Add an approximate area (e.g. Near Kpansia)"
@@ -124,7 +180,9 @@ export default function CreateDoAmPage() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="date" className="flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" /> Date</Label>
+            <Label htmlFor="date" className="flex items-center gap-1.5">
+              <CalendarDays className="h-3.5 w-3.5" /> Date
+            </Label>
             <Input
               id="date"
               type="date"
@@ -134,7 +192,9 @@ export default function CreateDoAmPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="time" className="flex items-center gap-1.5"><Clock3 className="h-3.5 w-3.5" /> Time</Label>
+            <Label htmlFor="time" className="flex items-center gap-1.5">
+              <Clock3 className="h-3.5 w-3.5" /> Time
+            </Label>
             <Input
               id="time"
               type="time"
@@ -146,7 +206,9 @@ export default function CreateDoAmPage() {
         </div>
 
         <div className="space-y-2">
-          <Label className="flex items-center gap-1.5"><Repeat className="h-3.5 w-3.5" /> Recurring</Label>
+          <Label className="flex items-center gap-1.5">
+            <Repeat className="h-3.5 w-3.5" /> Recurring
+          </Label>
           <div className="flex flex-wrap gap-2">
             {RECURRENCE_OPTIONS.map((opt) => (
               <button
@@ -165,7 +227,9 @@ export default function CreateDoAmPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="instructions">Additional instructions <span className="text-[#a1aba5] font-normal">(optional)</span></Label>
+          <Label htmlFor="instructions">
+            Additional instructions <span className="text-[#a1aba5] font-normal">(optional)</span>
+          </Label>
           <Textarea
             id="instructions"
             placeholder="Any extra details someone should know..."
@@ -221,8 +285,12 @@ export default function CreateDoAmPage() {
             disabled={loading}
             className="h-12 rounded-xl bg-[#0e6b53] px-6 font-semibold hover:bg-[#095640]"
           >
-            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
-              <span className="flex items-center gap-2"><Zap className="h-4 w-4" /> Post DoAm</span>
+            {loading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <span className="flex items-center gap-2">
+                <Zap className="h-4 w-4" /> Post DoAm
+              </span>
             )}
           </Button>
         </div>
