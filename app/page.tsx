@@ -14,7 +14,7 @@ export default function LandingPage() {
   useEffect(() => {
     if (!loading) {
       if (user && profile) {
-        router.replace(isProfileComplete(profile) ? '/home' : '/onboarding');
+        router.replace(isProfileComplete(profile) ? '/tasks/radar' : '/onboarding');
       }
     }
   }, [loading, user, profile, router]);
@@ -67,18 +67,18 @@ export default function LandingPage() {
         <div className="mt-16 grid gap-4 sm:grid-cols-3">
           <FeatureCard
             icon={<Plus className="h-5 w-5" />}
-            title="Post a DoAm"
-            description="Quickly share what you need. Set a reward, location, and time."
+            title="Post a task"
+            description="Share what needs doing, set a runner fee, and choose the pickup location."
           />
           <FeatureCard
             icon={<MapPin className="h-5 w-5" />}
             title="Discover nearby"
-            description="Browse opportunities on a map or feed, filtered by distance."
+            description="Find nearby tasks and claim the ones you can complete."
           />
           <FeatureCard
             icon={<Star className="h-5 w-5" />}
             title="Build reputation"
-            description="Complete DoAms, get rated, and grow your standing in the community."
+            description="Complete tasks, get rated, and grow your standing in the community."
           />
         </div>
       </div>

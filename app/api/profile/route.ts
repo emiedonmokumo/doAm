@@ -17,7 +17,7 @@ export async function GET() {
   if (!session?.user?.id) return Response.json(null, { status: 401 });
   const profile = await db.profile.findUnique({ where: { id: session.user.id }, include: { location: { select: { id: true } } } });
   if (!profile) return Response.json(null, { status: 404 });
-  return Response.json({ id: profile.id, full_name: profile.fullName, username: profile.username, email: session.user.email ?? '', bio: profile.bio, avatar_url: profile.avatarUrl, phone: profile.phone, skills: profile.skills, availability: profile.availability, rating_avg: Number(profile.ratingAverage), rating_count: profile.ratingCount, doams_created_count: profile.createdCount, doams_completed_count: profile.completedCount, location_set: Boolean(profile.location) });
+  return Response.json({ id: profile.id, full_name: profile.fullName, username: profile.username, email: session.user.email ?? '', bio: profile.bio, avatar_url: profile.avatarUrl, phone: profile.phone, skills: profile.skills, availability: profile.availability, rating_avg: Number(profile.ratingAverage), rating_count: profile.ratingCount, tasks_created_count: profile.createdCount, tasks_completed_count: profile.completedCount, location_set: Boolean(profile.location) });
 }
 
 export async function PATCH(request: Request) {

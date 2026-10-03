@@ -6,20 +6,28 @@ datasource db {
   provider = "postgresql"
 }
 
-enum DoAmStatus {
-  DRAFT
-  PUBLISHED
-  ACCEPTED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  EXPIRED
+enum TaskCategory {
+  PICKUP_DELIVERY
+  QUEUEING
+  FAVOR
+  QUICK_REPAIR
 }
 
-enum ApplicationStatus {
-  INTERESTED
-  ACCEPTED
-  WITHDRAWN
+enum SettlementMethod {
+  CASH_ON_DELIVERY
+  DIRECT_TRANSFER
+}
+
+enum TaskStatus {
+  POSTED
+  CLAIMED
+  EN_ROUTE_PICKUP
+  ARRIVED_PICKUP
+  PROOF_SUBMITTED
+  EN_ROUTE_DROPOFF
+  ARRIVED_DROPOFF
+  COMPLETED
+  CANCELLED
 }
 
 model User {
@@ -32,8 +40,8 @@ model User {
   accounts      Account[]
   sessions      Session[]
   profile       Profile?
-  createdDoAms  DoAm[]            @relation("Creator")
-  applications  DoAmApplication[]
+  createdTasks  Task[]            @relation("TaskPoster")
+  assignedTasks Task[]            @relation("TaskRunner")
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 }
@@ -94,7 +102,6 @@ model Profile {
 model Location {
   id                 String   @id @default(cuid())
   profileId          String?  @unique
-  doamId             String?  @unique
   latitude           Decimal  @db.Decimal(10, 7)
   longitude          Decimal  @db.Decimal(10, 7)
   city               String
@@ -102,73 +109,20 @@ model Location {
   country            String   @default("Nigeria")
   approximateAddress String?
   profile            Profile? @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  doam               DoAm?    @relation(fields: [doamId], references: [id], onDelete: Cascade)
   createdAt          DateTime @default(now())
-}
-
-model DoAm {
-  id              String              @id @default(cuid())
-  creatorId       String
-  title           String
-  description     String?
-  reward          Decimal             @db.Decimal(12, 2)
-  category        String?
-  status          DoAmStatus          @default(DRAFT)
-  scheduledAt     DateTime?
-  recurrence      String?
-  deadline        DateTime?
-  instructions    String?
-  isMultiPerson   Boolean             @default(false)
-  maxParticipants Int                 @default(1)
-  creator         User                @relation("Creator", fields: [creatorId], references: [id], onDelete: Cascade)
-  location        Location?
-  applications    DoAmApplication[]
-  conversations   Conversation[]
-  statusHistory   DoAmStatusHistory[]
-  comments        Comment[]
-  likes           Like[]
-  saves           SavedDoAm[]
-  ratings         Rating[]
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-
-  @@index([creatorId])
-  @@index([status, createdAt])
-}
-
-model DoAmApplication {
-  id          String            @id @default(cuid())
-  doamId      String
-  applicantId String
-  status      ApplicationStatus @default(INTERESTED)
-  doam        DoAm              @relation(fields: [doamId], references: [id], onDelete: Cascade)
-  applicant   User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-
-  @@unique([doamId, applicantId])
-  @@index([doamId, status])
-}
-
-model DoAmStatusHistory {
-  id          String     @id @default(cuid())
-  doamId      String
-  changedById String
-  status      DoAmStatus
-  doam        DoAm       @relation(fields: [doamId], references: [id], onDelete: Cascade)
-  createdAt   DateTime   @default(now())
 }
 
 model Conversation {
   id          String   @id @default(cuid())
-  doamId      String
-  requesterId String
-  doerId      String
-  doam        DoAm     @relation(fields: [doamId], references: [id], onDelete: Cascade)
+  taskId      String   @unique
+  posterId    String
+  runnerId    String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   messages    Message[]
   createdAt   DateTime @default(now())
 
-  @@unique([doamId, requesterId, doerId])
+  @@index([posterId, createdAt])
+  @@index([runnerId, createdAt])
 }
 
 model Message {
@@ -183,48 +137,6 @@ model Message {
   @@index([conversationId, createdAt])
 }
 
-model Comment {
-  id        String   @id @default(cuid())
-  doamId    String
-  userId    String
-  content   String
-  doam      DoAm     @relation(fields: [doamId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-
-  @@index([doamId, createdAt])
-}
-
-model Like {
-  id     String @id @default(cuid())
-  doamId String
-  userId String
-  doam   DoAm   @relation(fields: [doamId], references: [id], onDelete: Cascade)
-
-  @@unique([doamId, userId])
-}
-
-model SavedDoAm {
-  id     String @id @default(cuid())
-  doamId String
-  userId String
-  doam   DoAm   @relation(fields: [doamId], references: [id], onDelete: Cascade)
-
-  @@unique([doamId, userId])
-}
-
-model Rating {
-  id          String   @id @default(cuid())
-  doamId      String
-  raterId     String
-  ratedUserId String
-  score       Int
-  review      String?
-  doam        DoAm     @relation(fields: [doamId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-
-  @@unique([doamId, raterId, ratedUserId])
-}
-
 model Notification {
   id          String    @id @default(cuid())
   recipientId String
@@ -236,4 +148,71 @@ model Notification {
   createdAt   DateTime  @default(now())
 
   @@index([recipientId, readAt, createdAt])
+}
+
+model Task {
+  id                    String            @id @default(cuid())
+  posterId              String
+  runnerId              String?
+  title                 String
+  description           String?
+  category              TaskCategory
+  runnerFee             Decimal           @db.Decimal(12, 2)
+  estimatedExpenses     Decimal           @db.Decimal(12, 2)
+  settlementMethod      SettlementMethod
+  status                TaskStatus        @default(POSTED)
+  pickupLatitude        Decimal            @db.Decimal(10, 7)
+  pickupLongitude       Decimal            @db.Decimal(10, 7)
+  pickupCity            String
+  pickupRegion          String
+  pickupApproximateArea String
+  dropoffLatitude       Decimal?           @db.Decimal(10, 7)
+  dropoffLongitude      Decimal?           @db.Decimal(10, 7)
+  dropoffCity           String?
+  dropoffRegion         String?
+  dropoffApproximateArea String?
+  handshakePinHash      String
+  pinFailedAttempts     Int                @default(0)
+  pinLockedAt           DateTime?
+  proofUrl              String?
+  proofPublicId         String?
+  claimedAt             DateTime?
+  completedAt           DateTime?
+  poster                User               @relation("TaskPoster", fields: [posterId], references: [id], onDelete: Cascade)
+  runner                User?              @relation("TaskRunner", fields: [runnerId], references: [id], onDelete: SetNull)
+  conversation          Conversation?
+  events                TaskEvent[]
+  ratings               TaskRating[]
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  @@index([status, createdAt])
+  @@index([posterId, createdAt])
+  @@index([runnerId, status])
+}
+
+model TaskEvent {
+  id        String   @id @default(cuid())
+  taskId    String
+  actorId   String
+  type      String
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, createdAt])
+}
+
+model TaskRating {
+  id          String   @id @default(cuid())
+  taskId      String
+  raterId     String
+  ratedUserId String
+  score       Int
+  review      String?
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([taskId, raterId, ratedUserId])
+  @@index([ratedUserId])
 }

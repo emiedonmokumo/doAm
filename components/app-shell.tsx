@@ -2,16 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home as HomeIcon, Compass, Plus, MessageCircle, UserRound, Bell, Menu, X } from 'lucide-react';
+import { Radar, ListChecks, Plus, MessageCircle, UserRound, Bell, Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: '/home', label: 'Home', icon: HomeIcon },
-  { href: '/explore', label: 'Explore', icon: Compass },
-  { href: '/create', label: 'Create', icon: Plus, isCenter: true },
+  { href: '/tasks/radar', label: 'Radar', icon: Radar },
+  { href: '/tasks/mine', label: 'My tasks', icon: ListChecks },
+  { href: '/tasks/new', label: 'Post task', icon: Plus, isCenter: true },
   { href: '/messages', label: 'Messages', icon: MessageCircle },
   { href: '/profile', label: 'Profile', icon: UserRound },
 ];
@@ -155,7 +155,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex w-16 flex-col items-center gap-1 text-[10px] font-semibold',
+                'flex w-14 flex-col items-center gap-1 text-[10px] font-semibold',
                 isActive ? 'text-[#0e6b53]' : 'text-[#93a099]'
               )}
             >
