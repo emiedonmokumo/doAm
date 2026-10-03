@@ -19,8 +19,25 @@ type FeedMapProps = {
 };
 
 const BRAND = '#0e6b53';
+const YOU = '#2563eb';
+const NEIGHBOUR = '#f59e0b';
 const shortMoney = (value: number) => (value >= 1000 ? `₦${Math.round(value / 100) / 10}k` : `₦${value}`);
 const money = (value: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(value);
+
+/** Muted, slightly darkened base map so DoAm markers stand out from Google's own features. */
+const MAP_STYLES: google.maps.MapTypeStyle[] = [
+  { elementType: 'geometry', stylers: [{ saturation: -55 }, { lightness: -12 }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#4b5563' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#f3f4f6' }, { weight: 2 }] },
+  { featureType: 'poi', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi', elementType: 'labels.text', stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#b9c4bd' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#e5e7eb' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#d1d5db' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#94a3b8' }] },
+];
 
 function taskIcon(selected: boolean): google.maps.Symbol {
   return {
@@ -28,8 +45,8 @@ function taskIcon(selected: boolean): google.maps.Symbol {
     fillColor: selected ? '#e8704a' : BRAND,
     fillOpacity: 1,
     strokeColor: '#ffffff',
-    strokeWeight: 2,
-    scale: selected ? 1.25 : 1,
+    strokeWeight: 2.5,
+    scale: selected ? 1.35 : 1.1,
     labelOrigin: new google.maps.Point(0, -16),
   };
 }
@@ -50,7 +67,7 @@ export function FeedMap({ center, tasks, nearbyUsers, selectedTaskId, onSelectTa
       map.current = new GoogleMap(mapElement.current, {
         center: { lat: 9.082, lng: 8.6753 }, zoom: 6,
         streetViewControl: false, mapTypeControl: false, fullscreenControl: false, clickableIcons: false,
-        gestureHandling: 'cooperative',
+        gestureHandling: 'cooperative', styles: MAP_STYLES,
       });
       map.current.addListener('click', () => selectRef.current(null));
       setStatus('ready');
@@ -72,18 +89,20 @@ export function FeedMap({ center, tasks, nearbyUsers, selectedTaskId, onSelectTa
     if (center) {
       const position = { lat: center.latitude, lng: center.longitude };
       bounds.extend(position);
-      current.others.push(new google.maps.Circle({ map: instance, center: position, radius: 10_000, strokeColor: BRAND, strokeOpacity: 0.25, strokeWeight: 1, fillColor: BRAND, fillOpacity: 0.04, clickable: false }));
-      current.others.push(new google.maps.Marker({ map: instance, position, zIndex: 1000, title: 'You', icon: { path: google.maps.SymbolPath.CIRCLE, scale: 9, fillColor: '#2563eb', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 3 } }));
+      current.others.push(new google.maps.Circle({ map: instance, center: position, radius: 10_000, strokeColor: BRAND, strokeOpacity: 0.6, strokeWeight: 2, fillColor: BRAND, fillOpacity: 0.06, clickable: false }));
+      // Soft halo + solid dot gives the "You" marker a beacon look.
+      current.others.push(new google.maps.Marker({ map: instance, position, zIndex: 999, clickable: false, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 20, fillColor: YOU, fillOpacity: 0.22, strokeColor: YOU, strokeOpacity: 0.5, strokeWeight: 1 } }));
+      current.others.push(new google.maps.Marker({ map: instance, position, zIndex: 1000, title: 'You', icon: { path: google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: YOU, fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 3.5 } }));
     }
     nearbyUsers.forEach((user) => {
-      current.others.push(new google.maps.Marker({ map: instance, position: { lat: user.latitude, lng: user.longitude }, clickable: false, zIndex: 1, title: 'Community member nearby', icon: { path: google.maps.SymbolPath.CIRCLE, scale: 5, fillColor: '#7fbfa9', fillOpacity: 0.85, strokeColor: '#ffffff', strokeWeight: 1.5 } }));
+      current.others.push(new google.maps.Marker({ map: instance, position: { lat: user.latitude, lng: user.longitude }, clickable: false, zIndex: 1, title: 'Community member nearby', icon: { path: google.maps.SymbolPath.CIRCLE, scale: 7, fillColor: NEIGHBOUR, fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 2.5 } }));
     });
     tasks.forEach((task) => {
       const position = { lat: task.approximateLatitude, lng: task.approximateLongitude };
       bounds.extend(position);
       const marker = new google.maps.Marker({
         map: instance, position, title: task.title, zIndex: 10, icon: taskIcon(false),
-        label: { text: shortMoney(task.runnerFee), color: '#ffffff', fontSize: '9px', fontWeight: '700' },
+        label: { text: shortMoney(task.runnerFee), color: '#ffffff', fontSize: '10px', fontWeight: '800' },
       });
       marker.addListener('click', () => selectRef.current(task.id));
       current.tasks.set(task.id, marker);
@@ -111,10 +130,10 @@ export function FeedMap({ center, tasks, nearbyUsers, selectedTaskId, onSelectTa
       {status === 'loading' && <div className="absolute inset-0 flex items-center justify-center gap-2 text-sm text-[#68766e]"><Loader2 className="h-4 w-4 animate-spin" />Loading map…</div>}
       {status === 'unavailable' && <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center text-sm text-[#68766e]"><MapPin className="h-6 w-6 text-[#0e6b53]" />The map is unavailable right now. Nearby tasks are still listed below.</div>}
       {status === 'ready' && (
-        <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap gap-2 text-[11px] font-semibold text-[#27352e]">
-          <span className="flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 shadow-sm"><span className="h-2.5 w-2.5 rounded-full bg-[#2563eb] ring-2 ring-white" />You</span>
-          <span className="flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 shadow-sm"><span className="h-2.5 w-2.5 rounded-full bg-[#0e6b53]" />Tasks · {tasks.length}</span>
-          <span className="flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 shadow-sm"><span className="h-2 w-2 rounded-full bg-[#7fbfa9]" />Neighbours · {nearbyUsers.length}</span>
+        <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap gap-2 text-[11px] font-semibold text-white">
+          <span className="flex items-center gap-1.5 rounded-full bg-[#16241d]/85 px-2.5 py-1 shadow-md ring-1 ring-white/10 backdrop-blur"><span className="h-2.5 w-2.5 rounded-full bg-[#2563eb] ring-2 ring-white" />You</span>
+          <span className="flex items-center gap-1.5 rounded-full bg-[#16241d]/85 px-2.5 py-1 shadow-md ring-1 ring-white/10 backdrop-blur"><span className="h-2.5 w-2.5 rounded-full bg-[#0e6b53] ring-2 ring-white" />Tasks · {tasks.length}</span>
+          <span className="flex items-center gap-1.5 rounded-full bg-[#16241d]/85 px-2.5 py-1 shadow-md ring-1 ring-white/10 backdrop-blur"><span className="h-2.5 w-2.5 rounded-full bg-[#f59e0b] ring-2 ring-white" />Neighbours · {nearbyUsers.length}</span>
         </div>
       )}
       {selectedTask && (
