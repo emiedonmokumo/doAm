@@ -1,11 +1,21 @@
 name: Database migrations
 
 on:
+  # PRs: validate migrations against a throwaway Postgres container only. Never touches DB_URL.
   pull_request:
     branches: [dev, main]
     types: [opened, synchronize, reopened]
+    paths:
+      - 'prisma/**'
+      - 'prisma.config.ts'
+      - '.github/workflows/database-migrations.yml'
+  # Push (i.e. a merged PR): deploy migrations to the real database.
   push:
     branches: [dev, main]
+    paths:
+      - 'prisma/**'
+      - 'prisma.config.ts'
+      - '.github/workflows/database-migrations.yml'
 
 permissions:
   contents: read
