@@ -8,11 +8,12 @@ if (!connectionString) {
   throw new Error('DATABASE_URL must be configured before Prisma can start.');
 }
 
-const databaseUrl = connectionString.includes('sslmode=')
-  ? connectionString
-  : `${connectionString}${connectionString.includes('?') ? '&' : '?'}sslmode=require`;
+const caCertificate = process.env.SUPABASE_CA_CERT;
+const ssl = caCertificate
+  ? { ca: caCertificate, rejectUnauthorized: true }
+  : { rejectUnauthorized: false };
 
 export const db = globalForPrisma.prisma ?? new PrismaClient({
-  adapter: new PrismaPg({ connectionString: databaseUrl }),
+  adapter: new PrismaPg({ connectionString, ssl }),
 });
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db;

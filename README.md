@@ -39,6 +39,8 @@ DoAm is a standard Next.js application and can run on Vercel, Netlify, or any pl
 
 The GitHub Actions workflow replays all migrations against a clean PostgreSQL Alpine service on each pull request update targeting `dev` or `main`. A push to either branch (including a merged pull request) applies migrations to that branch’s GitHub environment. Create a GitHub Actions environment named `development` restricted to the `dev` branch and another named `production` restricted to `main`; add a secret named `DB_URL` to each environment. Set each secret to that environment’s Supabase **Session Pooler** connection URI from its Connect panel. Use the supplied pooler host and username, URL-encode reserved characters in the password, and require SSL. Do not use the Transaction Pooler URI for Prisma migrations.
 
+For the application runtime, set `SUPABASE_CA_CERT` to the Supabase CA certificate PEM to verify the PostgreSQL TLS connection.
+
 The Task MVP does not currently define a scheduled maintenance/expiry endpoint; do not configure a cron job until that endpoint is implemented.
 
 Do not expose database, Cloudinary secret, or OAuth credentials to the browser. Google Maps browser keys must be restricted by domain and enabled APIs.
