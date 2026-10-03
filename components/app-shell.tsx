@@ -129,7 +129,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <div className="lg:pl-[240px]">
-        <main className="mx-auto max-w-[900px] px-4 pb-24 pt-4 lg:px-8 lg:pb-8 lg:pt-8">
+        <main className={cn('mx-auto px-4 pb-24 pt-4 lg:px-8 lg:pb-8 lg:pt-8', pathname === '/tasks/radar' ? 'max-w-[900px] lg:max-w-none' : 'max-w-[900px]')}>
           {children}
         </main>
       </div>

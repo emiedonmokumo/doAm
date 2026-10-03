@@ -31,13 +31,13 @@ export default function RadarPage() {
     window.location.assign(`/tasks/${id}`);
   }
   const toggleClass = (active: boolean) => `flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition ${active ? 'bg-white text-[#0e6b53] shadow-sm' : 'text-[#68766e]'}`;
-  return <main className="mx-auto max-w-5xl space-y-5">
+  return <div className="w-full space-y-5">
     <header className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wider text-[#0e6b53]">Runner radar · 10 km</p><h1 className="mt-2 text-2xl font-bold text-[#16241d]">Nearby tasks</h1><p className="mt-1 text-sm text-[#68766e]">Tasks are matched using the approximate location saved to your profile.</p></div><Link href="/tasks/new" className="rounded-lg bg-[#0e6b53] px-4 py-2.5 text-sm font-semibold text-white">Post a task</Link></header>
     <div className="flex gap-1 rounded-xl bg-[#e8eeea] p-1 lg:hidden" role="tablist" aria-label="Radar view">
       <button type="button" role="tab" aria-selected={mobileView === 'map'} onClick={() => setMobileView('map')} className={toggleClass(mobileView === 'map')}><MapIcon className="h-4 w-4" />Map</button>
       <button type="button" role="tab" aria-selected={mobileView === 'list'} onClick={() => setMobileView('list')} className={toggleClass(mobileView === 'list')}><List className="h-4 w-4" />List · {tasks.length}</button>
     </div>
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1.6fr)_minmax(380px,1fr)] lg:gap-6">
       <FeedMap center={center} tasks={tasks} nearbyUsers={nearbyUsers} selectedTaskId={selectedTaskId} onSelectTask={setSelectedTaskId} className={`h-[60vh] min-h-[360px] lg:sticky lg:top-8 lg:block lg:h-[calc(100vh-12rem)] ${mobileView === 'map' ? 'block' : 'hidden'}`} />
       <section className={`space-y-3 lg:block ${mobileView === 'list' ? 'block' : 'hidden'}`} aria-label="Nearby task list">
         {message && <p role="status" className="rounded-xl bg-white p-5 text-sm text-[#68766e]">{message}</p>}
@@ -48,5 +48,5 @@ export default function RadarPage() {
         </article>)}
       </section>
     </div>
-  </main>;
+  </div>;
 }
