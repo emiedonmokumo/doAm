@@ -1,21 +1,54 @@
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { normalizeCaCertificate, resolveSslConfig, stripSslParams } from './db-ssl';
+import type { ConnectionOptions } from 'node:tls';
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
-const connectionString = process.env.DATABASE_URL;
+/**
+ * Query parameters that node-postgres turns into an `ssl` config. Because `pg`
+ * merges the parsed connection string *over* explicit options, leaving any of
+ * these in DATABASE_URL silently replaces the `ssl` object we pass in code.
+ */
+const SSL_QUERY_PARAMS = [
+  'ssl',
+  'sslmode',
+  'sslrootcert',
+  'sslcert',
+  'sslkey',
+  'sslnegotiation',
+  'uselibpqcompat',
+] as const;
 
-if (!connectionString) {
-  throw new Error('DATABASE_URL must be configured before Prisma can start.');
+export function stripSslParams(connectionString: string): string {
+  let url: URL;
+  try {
+    url = new URL(connectionString);
+  } catch {
+    return connectionString;
+  }
+  for (const param of SSL_QUERY_PARAMS) url.searchParams.delete(param);
+  return url.toString();
 }
 
-const ssl = resolveSslConfig({
-  caCertificate: normalizeCaCertificate(process.env.SUPABASE_CA_CERT),
-  isProduction: process.env.NODE_ENV === 'production',
-  isBuildPhase: process.env.NEXT_PHASE === 'phase-production-build',
-});
+/** Accepts multi-line PEM or single-line PEM with literal `\n` escapes. */
+export function normalizeCaCertificate(value: string | undefined): string | undefined {
+  const normalized = value?.replace(/\\n/g, '\n').trim();
+  return normalized ? normalized : undefined;
+}
 
-export const db = globalForPrisma.prisma ?? new PrismaClient({
-  adapter: new PrismaPg({ connectionString: stripSslParams(connectionString), ssl }),
-});
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db;
+interface ResolveSslOptions {
+  caCertificate: string | undefined;
+  isProduction: boolean;
+  isBuildPhase: boolean;
+}
+
+export function resolveSslConfig({
+  caCertificate,
+  isProduction,
+  isBuildPhase,
+}: ResolveSslOptions): ConnectionOptions {
+  if (caCertificate) return { ca: caCertificate, rejectUnauthorized: true };
+
+  if (isProduction && !isBuildPhase) {
+    throw new Error('SUPABASE_CA_CERT must be configured in production to verify the database TLS connection.');
+  }
+
+  // Local development / build only: encrypted but unverified.
+  return { rejectUnauthorized: false };
+}
