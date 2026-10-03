@@ -100,7 +100,7 @@ export default function NewTaskPage() {
 
   if (pin) return <section className="mx-auto max-w-lg space-y-5 rounded-2xl border border-[#dce8e1] bg-white p-6">
     <p className="text-xs font-bold uppercase tracking-wider text-[#0e6b53]">Task posted</p><h1 className="text-2xl font-bold text-[#16241d]">Your handover PIN</h1>
-    <p className="text-sm text-[#68766e]">Give this PIN to your runner in person after the task is done. It is shown once and is required to confirm completion.</p>
+    <p className="text-sm text-[#68766e]">Give this PIN to your runner in person after the task is done to confirm completion. You can also view this PIN anytime on your task details page.</p>
     <div className="rounded-xl bg-[#edf7f2] py-5 text-center font-mono text-4xl font-bold tracking-[0.35em] text-[#0e6b53]" aria-label={`Handover PIN ${pin}`}>{pin}</div>
     <Button className="h-12 w-full bg-[#0e6b53]" onClick={() => router.push(`/tasks/${taskId}`)}>Open task</Button>
   </section>;
