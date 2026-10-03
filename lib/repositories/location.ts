@@ -58,13 +58,22 @@ export async function findTasksNearRunner(runnerId: string) {
       pickupLatitude: bounds.latitude,
       pickupLongitude: bounds.longitude,
     },
+    include: { images: { select: { url: true }, take: 1, orderBy: { order: 'asc' } } },
     orderBy: { createdAt: 'desc' }, take: 200,
   });
   return candidates.flatMap((task) => {
     const km = distanceKm({ latitude, longitude }, { latitude: Number(task.pickupLatitude), longitude: Number(task.pickupLongitude) });
     if (km > RADAR_RADIUS_KM) return [];
     const approximate = approximateCoordinates(task.id, Number(task.pickupLatitude), Number(task.pickupLongitude));
-    return [{ id: task.id, title: task.title, description: task.description, category: task.category, runnerFee: Number(task.runnerFee), estimatedExpenses: Number(task.estimatedExpenses), settlementMethod: task.settlementMethod, pickupArea: task.pickupApproximateArea, pickupCity: task.pickupCity, pickupRegion: task.pickupRegion, approximateLatitude: approximate.latitude, approximateLongitude: approximate.longitude, distanceKm: Math.round(km * 10) / 10, createdAt: task.createdAt }];
+    return [{
+      id: task.id, title: task.title, description: task.description, category: task.category,
+      runnerFee: Number(task.runnerFee), estimatedExpenses: Number(task.estimatedExpenses),
+      settlementMethod: task.settlementMethod, pickupArea: task.pickupApproximateArea,
+      pickupCity: task.pickupCity, pickupRegion: task.pickupRegion,
+      approximateLatitude: approximate.latitude, approximateLongitude: approximate.longitude,
+      distanceKm: Math.round(km * 10) / 10, createdAt: task.createdAt,
+      imageUrl: task.images[0]?.url ?? null,
+    }];
   });
 }
 

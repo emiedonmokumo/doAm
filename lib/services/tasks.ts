@@ -6,7 +6,7 @@ import { createTaskSchema } from '@/lib/validation/tasks';
 import { isWithinRunnerRadar } from '@/lib/repositories/location';
 import { canAdvanceTask, taskHandoverStatus, taskRatingRecipient, taskRequiresProof } from '@/lib/services/task-policy';
 
-export async function createTask(posterId: string, raw: unknown) {
+export async function createTask(posterId: string, raw: unknown, images?: Array<{ url: string; publicId: string; order: number }>) {
   const input = createTaskSchema.parse(raw);
   const pin = String(randomInt(0, 10_000)).padStart(4, '0');
   const handshakePinHash = await bcrypt.hash(pin, 12);
@@ -19,7 +19,16 @@ export async function createTask(posterId: string, raw: unknown) {
       pickupCity: input.pickup.city, pickupRegion: input.pickup.region, pickupApproximateArea: input.pickup.approximateArea,
       ...(input.dropoff ? { dropoffLatitude: new Prisma.Decimal(input.dropoff.latitude), dropoffLongitude: new Prisma.Decimal(input.dropoff.longitude), dropoffCity: input.dropoff.city, dropoffRegion: input.dropoff.region, dropoffApproximateArea: input.dropoff.approximateArea } : {}),
       handshakePinHash,
-    } });
+      ...(images?.length ? {
+        images: {
+          create: images.map((img) => ({
+            url: img.url,
+            publicId: img.publicId,
+            order: img.order,
+          })),
+        },
+      } : {}),
+    }, include: { images: true } });
     await tx.taskEvent.create({ data: { taskId: created.id, actorId: posterId, type: 'POSTED' } });
     await tx.profile.update({ where: { id: posterId }, data: { createdCount: { increment: 1 } } });
     return created;

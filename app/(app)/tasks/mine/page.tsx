@@ -11,6 +11,7 @@ type TaskSummary = {
   runner_fee: number;
   status: string;
   role: 'POSTER' | 'RUNNER';
+  imageUrl?: string | null;
 };
 
 const money = (value: number) => new Intl.NumberFormat('en-NG', {
@@ -47,10 +48,15 @@ export default function MyTasksPage() {
       {error ? <p role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-700">{error}</p> : tasks.length ? (
         <div className="space-y-3">
           {tasks.map((task) => (
-            <Link key={task.id} href={`/tasks/${task.id}`} className="flex items-center justify-between gap-4 rounded-xl border border-[#e2e9e5] bg-white p-4">
-              <div className="min-w-0">
-                <p className="truncate font-semibold text-[#16241d]">{task.title}</p>
-                <p className="mt-1 text-xs text-[#68766e]">{task.role === 'POSTER' ? 'Posted by you' : 'Claimed by you'} · {task.category.replaceAll('_', ' ')}</p>
+            <Link key={task.id} href={`/tasks/${task.id}`} className="flex items-center justify-between gap-4 rounded-xl border border-[#e2e9e5] bg-white p-4 transition hover:border-[#0e6b53]/40">
+              <div className="flex min-w-0 items-center gap-3">
+                {task.imageUrl && (
+                  <img src={task.imageUrl} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover ring-1 ring-[#e2e9e5]" />
+                )}
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-[#16241d]">{task.title}</p>
+                  <p className="mt-1 text-xs text-[#68766e]">{task.role === 'POSTER' ? 'Posted by you' : 'Claimed by you'} · {task.category.replaceAll('_', ' ')}</p>
+                </div>
               </div>
               <div className="shrink-0 text-right">
                 <p className="text-sm font-semibold text-[#0e6b53]">{money(task.runner_fee)}</p>
