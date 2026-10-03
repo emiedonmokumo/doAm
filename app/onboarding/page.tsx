@@ -48,7 +48,7 @@ export default function OnboardingPage() {
       router.replace('/sign-in');
     }
     if (profile && isProfileComplete(profile)) {
-      router.replace('/home');
+      router.replace('/tasks/radar');
     }
   }, [loading, user, profile, router]);
 
@@ -124,7 +124,7 @@ export default function OnboardingPage() {
     }
 
     await refreshProfile();
-    router.replace('/home');
+    router.replace('/tasks/radar');
   }
 
   if (loading) {

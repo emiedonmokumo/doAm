@@ -38,7 +38,7 @@ export default function SignUpPage() {
       setLoading(false);
       return;
     }
-    router.replace('/home');
+    router.replace('/tasks/radar');
     router.refresh();
   }
 
