@@ -101,14 +101,13 @@ model Profile {
 
 model Location {
   id                 String   @id @default(cuid())
-  profileId          String?  @unique
+  profileId          String   @unique
   latitude           Decimal  @db.Decimal(10, 7)
   longitude          Decimal  @db.Decimal(10, 7)
   city               String
   region             String
-  country            String   @default("Nigeria")
   approximateAddress String?
-  profile            Profile? @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile            Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
   createdAt          DateTime @default(now())
 }
 
