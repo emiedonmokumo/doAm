@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
-import { Check, Copy, Eye, EyeOff, KeyRound, X } from 'lucide-react';
+import { Check, Copy, Eye, EyeOff, KeyRound, Sparkles, X } from 'lucide-react';
 
 type Task = {
   id: string; title: string; description: string | null; category: string;
@@ -88,57 +88,102 @@ export default function TaskPage() {
         {task.is_runner && action && <button disabled={busy} onClick={() => void act(`/api/tasks/${id}/events`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action }) })} className="w-full rounded-xl bg-[#0e6b53] px-4 py-3 font-semibold text-white disabled:opacity-50">{busy ? 'Updating…' : labels[action]}</button>}
         {task.is_runner && proofNeeded && <form className="space-y-2" onSubmit={(event) => { event.preventDefault(); const file = (event.currentTarget.elements.namedItem('proof') as HTMLInputElement).files?.[0]; if (!file) return; const data = new FormData(); data.set('proof', file); void act(`/api/tasks/${id}/proof`, { method: 'POST', body: data }); }}><label className="block text-sm font-semibold" htmlFor="proof">Add proof photo (JPEG, PNG, or WebP; up to 5 MB)</label><input id="proof" name="proof" type="file" accept="image/jpeg,image/png,image/webp" required className="block w-full text-sm" /><button disabled={busy} className="w-full rounded-xl border border-[#0e6b53] px-4 py-3 font-semibold text-[#0e6b53]">{busy ? 'Uploading…' : 'Submit proof'}</button></form>}
         {task.is_runner && canSettle && <form className="flex gap-2" onSubmit={(event) => { event.preventDefault(); void act(`/api/tasks/${id}/settle`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pin }) }); }}><input aria-label="Handover PIN" inputMode="numeric" pattern="[0-9]{4}" maxLength={4} required value={pin} onChange={(event) => setPin(event.target.value)} placeholder="4-digit handover PIN" className="min-w-0 flex-1 rounded-xl border border-[#dce5df] px-3" /><button disabled={busy} className="rounded-xl bg-[#0e6b53] px-4 py-3 text-sm font-semibold text-white">{busy ? 'Checking…' : 'Confirm handover'}</button></form>}
-        {task.is_poster && task.handshake_pin && (
-          <section className="space-y-3 rounded-2xl border border-[#dce8e1] bg-[#f8fbf9] p-5">
-            <div className="flex items-center justify-between">
+        {task.is_poster && (
+          task.handshake_pin ? (
+            <section className="space-y-3 rounded-2xl border border-[#dce8e1] bg-[#f8fbf9] p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#edf7f2] px-2.5 py-0.5 text-xs font-semibold text-[#0e6b53]">
+                    <KeyRound className="h-3.5 w-3.5" />
+                    Handover PIN
+                  </span>
+                  {task.status === 'COMPLETED' && (
+                    <span className="text-xs font-medium text-[#68766e]">
+                      (Handover completed)
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPinVisible(!pinVisible)}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-[#0e6b53] hover:underline focus:outline-none"
+                    aria-label={pinVisible ? 'Hide PIN' : 'Reveal PIN'}
+                  >
+                    {pinVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    <span>{pinVisible ? 'Hide' : 'Reveal'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void copyPin(task.handshake_pin!)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-[#dce8e1] bg-white px-2.5 py-1 text-xs font-semibold text-[#16241d] shadow-sm transition hover:bg-[#f0f4f1] active:scale-95"
+                    aria-label="Copy Handover PIN"
+                  >
+                    {copiedPin ? <Check className="h-3.5 w-3.5 text-[#0e6b53]" /> : <Copy className="h-3.5 w-3.5 text-[#68766e]" />}
+                    <span>{copiedPin ? 'Copied!' : 'Copy'}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center rounded-xl border border-[#e2e9e5] bg-white py-4 shadow-sm">
+                <span
+                  className="font-mono text-3xl font-bold tracking-[0.35em] text-[#0e6b53] sm:text-4xl"
+                  aria-label={pinVisible ? `PIN ${task.handshake_pin}` : 'Hidden PIN'}
+                >
+                  {pinVisible ? task.handshake_pin : '••••'}
+                </span>
+              </div>
+
+              <p className="text-xs leading-relaxed text-[#536158]">
+                {task.status === 'COMPLETED'
+                  ? 'This 4-digit PIN was used to verify handover when the task was completed.'
+                  : 'Share this 4-digit PIN with your runner in person only after the task is completed to confirm handover and release settlement.'}
+              </p>
+            </section>
+          ) : task.status !== 'COMPLETED' && task.status !== 'CANCELLED' ? (
+            <section className="space-y-3 rounded-2xl border border-[#dce8e1] bg-[#f8fbf9] p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#edf7f2] px-2.5 py-0.5 text-xs font-semibold text-[#0e6b53]">
+                    <KeyRound className="h-3.5 w-3.5" />
+                    Handover PIN
+                  </span>
+                  <span className="text-xs font-medium text-[#68766e]">
+                    (Not generated)
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs leading-relaxed text-[#536158]">
+                This task does not have an active handover PIN attached. Generate a secure 4-digit PIN below to allow your runner to complete handover and confirm settlement.
+              </p>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void act(`/api/tasks/${id}/pin`, { method: 'POST' })}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#0e6b53] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0c5945] disabled:opacity-50"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>{busy ? 'Generating PIN…' : 'Generate Handover PIN'}</span>
+              </button>
+            </section>
+          ) : (
+            <section className="space-y-2 rounded-2xl border border-[#e2e9e5] bg-[#f8faf9] p-5">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#edf7f2] px-2.5 py-0.5 text-xs font-semibold text-[#0e6b53]">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f0f4f1] px-2.5 py-0.5 text-xs font-semibold text-[#536158]">
                   <KeyRound className="h-3.5 w-3.5" />
                   Handover PIN
                 </span>
-                {task.status === 'COMPLETED' && (
-                  <span className="text-xs font-medium text-[#68766e]">
-                    (Handover completed)
-                  </span>
-                )}
+                <span className="text-xs font-medium text-[#68766e]">
+                  ({task.status === 'COMPLETED' ? 'Task completed' : 'Task cancelled'})
+                </span>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPinVisible(!pinVisible)}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-[#0e6b53] hover:underline focus:outline-none"
-                  aria-label={pinVisible ? 'Hide PIN' : 'Reveal PIN'}
-                >
-                  {pinVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  <span>{pinVisible ? 'Hide' : 'Reveal'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void copyPin(task.handshake_pin!)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-[#dce8e1] bg-white px-2.5 py-1 text-xs font-semibold text-[#16241d] shadow-sm transition hover:bg-[#f0f4f1] active:scale-95"
-                  aria-label="Copy Handover PIN"
-                >
-                  {copiedPin ? <Check className="h-3.5 w-3.5 text-[#0e6b53]" /> : <Copy className="h-3.5 w-3.5 text-[#68766e]" />}
-                  <span>{copiedPin ? 'Copied!' : 'Copy'}</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center rounded-xl border border-[#e2e9e5] bg-white py-4 shadow-sm">
-              <span
-                className="font-mono text-3xl font-bold tracking-[0.35em] text-[#0e6b53] sm:text-4xl"
-                aria-label={pinVisible ? `PIN ${task.handshake_pin}` : 'Hidden PIN'}
-              >
-                {pinVisible ? task.handshake_pin : '••••'}
-              </span>
-            </div>
-
-            <p className="text-xs leading-relaxed text-[#536158]">
-              {task.status === 'COMPLETED'
-                ? 'This 4-digit PIN was used to verify handover when the task was completed.'
-                : 'Share this 4-digit PIN with your runner in person only after the task is completed to confirm handover and release settlement.'}
-            </p>
-          </section>
+              <p className="text-xs leading-relaxed text-[#68766e]">
+                {task.status === 'COMPLETED'
+                  ? 'This task was completed without an active PIN.'
+                  : 'This task was cancelled and no handover PIN is required.'}
+              </p>
+            </section>
+          )
         )}
         {task.conversation_id && (task.is_poster || task.is_runner) && <Link href={`/messages?task=${task.id}`} className="block rounded-xl border border-[#0e6b53] px-4 py-3 text-center text-sm font-semibold text-[#0e6b53]">Open task chat</Link>}
         {task.can_rate && !task.has_rated && <form className="space-y-3 border-t border-[#edf1ee] pt-4" onSubmit={(event) => { event.preventDefault(); void act(`/api/tasks/${id}/ratings`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ score, review }) }); }}><h2 className="text-sm font-bold">Rate your task partner</h2><div className="flex gap-3"><select aria-label="Rating" value={score} onChange={(event) => setScore(Number(event.target.value))} className="rounded-lg border border-[#dce5df] px-3"><option value={5}>5 stars</option><option value={4}>4 stars</option><option value={3}>3 stars</option><option value={2}>2 stars</option><option value={1}>1 star</option></select><input aria-label="Review (optional)" value={review} onChange={(event) => setReview(event.target.value)} maxLength={1000} placeholder="Leave a short review" className="min-w-0 flex-1 rounded-lg border border-[#dce5df] px-3" /><button disabled={busy} className="rounded-lg bg-[#0e6b53] px-4 py-2 text-sm font-semibold text-white">Submit rating</button></div></form>}

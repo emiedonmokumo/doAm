@@ -128,3 +128,29 @@ export async function rateTask(raterId: string, taskId: string, score: number, r
     return rating;
   });
 }
+
+export async function generateTaskPin(posterId: string, taskId: string) {
+  const task = await db.task.findUniqueOrThrow({ where: { id: taskId } });
+  if (task.posterId !== posterId) {
+    throw new Error('Only the task poster can generate a handover PIN.');
+  }
+  if (task.status === 'COMPLETED' || task.status === 'CANCELLED') {
+    throw new Error('Cannot generate a handover PIN for a completed or cancelled task.');
+  }
+
+  const pin = String(randomInt(0, 10_000)).padStart(4, '0');
+  const handshakePinHash = await bcrypt.hash(pin, 12);
+  const handshakePinEncrypted = encryptPin(pin);
+
+  await db.task.update({
+    where: { id: taskId },
+    data: {
+      handshakePinHash,
+      handshakePinEncrypted,
+      pinFailedAttempts: 0,
+      pinLockedAt: null,
+    },
+  });
+
+  return { handshakePin: pin };
+}
