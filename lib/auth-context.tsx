@@ -21,8 +21,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfileLoading(false);
     }
   };
-  useEffect(() => { void refreshProfile(); }, [session?.user?.id]);
+  useEffect(() => {
+    void refreshProfile();
+  }, [session?.user?.id]);
   const user = session?.user?.id ? { id: session.user.id, email: session.user.email } : null;
-  return <AuthContext.Provider value={{ user, profile, loading: status === 'loading' || Boolean(session?.user?.id && profileLoading), signOut: async () => { await signOut({ callbackUrl: '/' }); }, refreshProfile }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        profile,
+        loading: status === 'loading' || Boolean(session?.user?.id && profileLoading),
+        signOut: async () => {
+          await signOut({ callbackUrl: '/' });
+        },
+        refreshProfile,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
-export function useAuth() { return useContext(AuthContext); }
+export function useAuth() {
+  return useContext(AuthContext);
+}
