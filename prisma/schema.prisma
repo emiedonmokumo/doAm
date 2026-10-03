@@ -172,6 +172,7 @@ model Task {
   dropoffRegion         String?
   dropoffApproximateArea String?
   handshakePinHash      String
+  handshakePinEncrypted String?
   pinFailedAttempts     Int                @default(0)
   pinLockedAt           DateTime?
   proofUrl              String?

@@ -5,11 +5,13 @@ import { db } from '@/lib/db';
 import { createTaskSchema } from '@/lib/validation/tasks';
 import { isWithinRunnerRadar } from '@/lib/repositories/location';
 import { canAdvanceTask, taskHandoverStatus, taskRatingRecipient, taskRequiresProof } from '@/lib/services/task-policy';
+import { encryptPin } from '@/lib/services/crypto';
 
 export async function createTask(posterId: string, raw: unknown, images?: Array<{ url: string; publicId: string; order: number }>) {
   const input = createTaskSchema.parse(raw);
   const pin = String(randomInt(0, 10_000)).padStart(4, '0');
   const handshakePinHash = await bcrypt.hash(pin, 12);
+  const handshakePinEncrypted = encryptPin(pin);
   const task = await db.$transaction(async (tx) => {
     const created = await tx.task.create({ data: {
       posterId, title: input.title, description: input.description, category: input.category,
@@ -19,6 +21,7 @@ export async function createTask(posterId: string, raw: unknown, images?: Array<
       pickupCity: input.pickup.city, pickupRegion: input.pickup.region, pickupApproximateArea: input.pickup.approximateArea,
       ...(input.dropoff ? { dropoffLatitude: new Prisma.Decimal(input.dropoff.latitude), dropoffLongitude: new Prisma.Decimal(input.dropoff.longitude), dropoffCity: input.dropoff.city, dropoffRegion: input.dropoff.region, dropoffApproximateArea: input.dropoff.approximateArea } : {}),
       handshakePinHash,
+      handshakePinEncrypted,
       ...(images?.length ? {
         images: {
           create: images.map((img) => ({

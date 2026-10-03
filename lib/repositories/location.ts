@@ -92,7 +92,7 @@ export async function findUsersNearRunner(runnerId: string) {
   const longitude = Number(location.longitude);
   const bounds = radarBounds(latitude, longitude);
   const neighbours = await db.location.findMany({
-    where: { profileId: { not: null, notIn: [runnerId] }, latitude: bounds.latitude, longitude: bounds.longitude },
+    where: { profileId: { notIn: [runnerId] }, latitude: bounds.latitude, longitude: bounds.longitude },
     select: { profileId: true, latitude: true, longitude: true },
     orderBy: { createdAt: 'desc' }, take: NEARBY_USERS_LIMIT * 2,
   });
