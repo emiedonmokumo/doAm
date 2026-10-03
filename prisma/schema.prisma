@@ -183,6 +183,7 @@ model Task {
   conversation          Conversation?
   events                TaskEvent[]
   ratings               TaskRating[]
+  images                TaskImage[]
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
 
@@ -216,3 +217,16 @@ model TaskRating {
   @@unique([taskId, raterId, ratedUserId])
   @@index([ratedUserId])
 }
+
+model TaskImage {
+  id        String   @id @default(cuid())
+  taskId    String
+  url       String
+  publicId  String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, order])
+}
+

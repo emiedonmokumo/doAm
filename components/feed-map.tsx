@@ -130,10 +130,10 @@ export function FeedMap({ center, tasks, nearbyUsers, selectedTaskId, onSelectTa
       {status === 'loading' && <div className="absolute inset-0 flex items-center justify-center gap-2 text-sm text-[#68766e]"><Loader2 className="h-4 w-4 animate-spin" />Loading map…</div>}
       {status === 'unavailable' && <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center text-sm text-[#68766e]"><MapPin className="h-6 w-6 text-[#0e6b53]" />The map is unavailable right now. Nearby tasks are still listed below.</div>}
       {status === 'ready' && (
-        <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap gap-2 text-[11px] font-semibold text-white">
-          <span className="flex items-center gap-1.5 rounded-full bg-[#16241d]/85 px-2.5 py-1 shadow-md ring-1 ring-white/10 backdrop-blur"><span className="h-2.5 w-2.5 rounded-full bg-[#2563eb] ring-2 ring-white" />You</span>
-          <span className="flex items-center gap-1.5 rounded-full bg-[#16241d]/85 px-2.5 py-1 shadow-md ring-1 ring-white/10 backdrop-blur"><span className="h-2.5 w-2.5 rounded-full bg-[#0e6b53] ring-2 ring-white" />Tasks · {tasks.length}</span>
-          <span className="flex items-center gap-1.5 rounded-full bg-[#16241d]/85 px-2.5 py-1 shadow-md ring-1 ring-white/10 backdrop-blur"><span className="h-2.5 w-2.5 rounded-full bg-[#f59e0b] ring-2 ring-white" />Neighbours · {nearbyUsers.length}</span>
+        <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap gap-2 text-[11px] font-semibold text-[#27352e]">
+          <span className="flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 shadow-sm"><span className="h-2.5 w-2.5 rounded-full bg-[#2563eb] ring-2 ring-white" />You</span>
+          <span className="flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 shadow-sm"><span className="h-2.5 w-2.5 rounded-full bg-[#0e6b53] ring-2 ring-white" />Tasks · {tasks.length}</span>
+          <span className="flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 shadow-sm"><span className="h-2.5 w-2.5 rounded-full bg-[#f59e0b] ring-2 ring-white" />Neighbours · {nearbyUsers.length}</span>
         </div>
       )}
       {selectedTask && (
